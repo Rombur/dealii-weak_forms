@@ -1208,13 +1208,42 @@ namespace WeakForms
 {
   template <int dim, int spacedim = dim, typename ScalarType>
   auto
+  constant_scalar(const ScalarType & value,
+                  const std::string &name_ascii,
+                  const std::string &name_latex)
+  {
+    const ScalarFunctor functor(name_ascii, name_latex);
+
+    return functor.template value<ScalarType, dim, spacedim>(
+      [value](const FEValuesBase<dim, spacedim> &, const unsigned int)
+      { return value; },
+      [value](const FEInterfaceValues<dim, spacedim> &, const unsigned int)
+      { return value; });
+  }
+
+
+
+  template <int dim, int spacedim = dim, typename ScalarType>
+  auto
   constant_scalar(const ScalarType &value)
   {
     using Converter = WeakForms::Utilities::ConvertNumericToText<ScalarType>;
-    const ScalarFunctor functor(Converter::to_ascii(value),
-                                Converter::to_latex(value));
+    return constant_scalar<dim, spacedim>(value,
+                                          Converter::to_ascii(value),
+                                          Converter::to_latex(value));
+  }
 
-    return functor.template value<ScalarType, dim, spacedim>(
+
+
+  template <int rank, int dim, int spacedim, typename ScalarType>
+  auto
+  constant_tensor(const Tensor<rank, spacedim, ScalarType> &value,
+                  const std::string &                       name_ascii,
+                  const std::string &                       name_latex)
+  {
+    const TensorFunctor<rank, spacedim> functor(name_ascii, name_latex);
+
+    return functor.template value<ScalarType, dim>(
       [value](const FEValuesBase<dim, spacedim> &, const unsigned int)
       { return value; },
       [value](const FEInterfaceValues<dim, spacedim> &, const unsigned int)
@@ -1229,14 +1258,20 @@ namespace WeakForms
   {
     using Converter = WeakForms::Utilities::ConvertNumericToText<
       Tensor<rank, spacedim, ScalarType>>;
-    const TensorFunctor<rank, spacedim> functor(Converter::to_ascii(value),
-                                                Converter::to_latex(value));
+    return constant_tensor(value,
+                           Converter::to_ascii(value),
+                           Converter::to_latex(value));
+  }
 
-    return functor.template value<ScalarType, dim>(
-      [value](const FEValuesBase<dim, spacedim> &, const unsigned int)
-      { return value; },
-      [value](const FEInterfaceValues<dim, spacedim> &, const unsigned int)
-      { return value; });
+
+
+  template <int dim, int spacedim, typename ScalarType>
+  auto
+  constant_vector(const Tensor<1, spacedim, ScalarType> &value,
+                  const std::string &                    name_ascii,
+                  const std::string &                    name_latex)
+  {
+    return constant_tensor<1, dim>(value, name_ascii, name_latex);
   }
 
 
@@ -1253,18 +1288,32 @@ namespace WeakForms
   template <int rank, int dim, int spacedim, typename ScalarType>
   auto
   constant_symmetric_tensor(
-    const SymmetricTensor<rank, spacedim, ScalarType> &value)
+    const SymmetricTensor<rank, spacedim, ScalarType> &value,
+    const std::string &                                name_ascii,
+    const std::string &                                name_latex)
   {
-    using Converter = WeakForms::Utilities::ConvertNumericToText<
-      SymmetricTensor<rank, spacedim, ScalarType>>;
-    const SymmetricTensorFunctor<rank, spacedim> functor(
-      Converter::to_ascii(value), Converter::to_latex(value));
+    const SymmetricTensorFunctor<rank, spacedim> functor(name_ascii,
+                                                         name_latex);
 
     return functor.template value<ScalarType, dim>(
       [value](const FEValuesBase<dim, spacedim> &, const unsigned int)
       { return value; },
       [value](const FEInterfaceValues<dim, spacedim> &, const unsigned int)
       { return value; });
+  }
+
+
+
+  template <int rank, int dim, int spacedim, typename ScalarType>
+  auto
+  constant_symmetric_tensor(
+    const SymmetricTensor<rank, spacedim, ScalarType> &value)
+  {
+    using Converter = WeakForms::Utilities::ConvertNumericToText<
+      SymmetricTensor<rank, spacedim, ScalarType>>;
+    return constant_symmetric_tensor(value,
+                                     Converter::to_ascii(value),
+                                     Converter::to_latex(value));
   }
 } // namespace WeakForms
 
